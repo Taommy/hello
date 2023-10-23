@@ -9,7 +9,7 @@ FONT_CSS = """
     body {
         font-family: 'Times New Roman', sans-serif;
     }
-
+    
     /* 定义标题的字体 */
     h1 {
         font-family: 'Times New Roman', sans-serif;
@@ -24,14 +24,15 @@ FONT_CSS = """
         font-family: 'Times New Roman', sans-serif;
     }
     /* 定义输入框的字体 */
-    input {
+    st.text_input {
         font-family: 'Times New Roman', sans-serif;
     }
 
     /* 定义表格中的中文字体为楷体 */
-    table {
+    st.table {
         font-family: 'KaiTi', 'Times New Roman', sans-serif;
     }
+    
 </style>
 """
 st.markdown(FONT_CSS, unsafe_allow_html=True)
@@ -58,8 +59,8 @@ mobile_css = """
 """
 st.markdown(mobile_css, unsafe_allow_html=True)
 # 添加一个标题
-st.title('基金主要信息')
-st.write(f"加载全部内容可能需要30秒左右")
+st.markdown('### 基金持股')
+
 # 用户输入
 user_input = st.text_input('请输入基金代码:比如007119')
 
@@ -76,7 +77,7 @@ if  user_input:
         st.write(f"基金名称：{fund_data['fS_name']}")
         st.write(f"基金代码：{fund_data['fS_code']}")
         yield_rates = f"""
-        累计收益率：
+        收益率：
         - 1月：{fund_data['syl_1y']}%
         - 3月：{fund_data['syl_3y']}%
         - 6月：{fund_data['syl_6y']}%
@@ -166,7 +167,7 @@ if  user_input:
     df_html.columns.name = '序号'
     import pandas as pd
     from concurrent.futures import ThreadPoolExecutor
-    st.markdown("## 持股数据")  # 添加标题
+    st.markdown("### 持股数据")  # 添加标题
     st.table(df_html.set_index('代码'))  # 使用Streamlit的dataframe显示功能，并移除索引  # 使用 Streamlit 的 dataframe 显示功能
 
 
@@ -179,11 +180,6 @@ if  user_input:
 
     # 使用从 get_main_holders 返回的字典列表创建一个新的 DataFrame
     holdings_df = df_html[['代码','名称']].merge(pd.DataFrame(holdings_data),on='代码').applymap(lambda x: x.replace('基金', '') if isinstance(x, str) else x)
-
-    # 将 DataFrame 转换为 HTML
-    html_df = holdings_df.to_html(index=False)
-
-
 
 # 如果用户输入了股票代码
 if user_input:
@@ -223,4 +219,45 @@ if user_input:
     except Exception as e:
         # 如果出现错误，则在Streamlit应用中显示错误信息
         st.error(f"出现错误: {str(e)}")
+
+if user_input:
+    first_manager_name, first_manager_info = next(iter(managers_info.items()))
+    gscc = get_gscc_data(gs_id=first_manager_info['公司id'])
+    gscc_html = gscc.head(10).astype(str)
+    st.markdown('### 基金公司整体持仓情况')
+    st.table(gscc_html.set_index('股票代码'))
+
+
+    try:
+# 定义一些预设的列名称和重命名字典
+        columns = "SECUCODE,SECURITY_NAME_ABBR,INVESTIGATORS,RECEIVE_START_DATE,NUMBERNEW"
+        column_rename = {
+            'SECUCODE': '股票代码',
+            'SECURITY_CODE': '股票代码',
+            'SECURITY_NAME_ABBR': '股票简称',
+            'RECEIVE_START_DATE': '调研日期',
+            'RECEIVE_OBJECT': '接待对象',
+            'RECEIVE_PLACE': '接待地点',
+            'RECEIVE_WAY_EXPLAIN': '接待方式说明',
+            'INVESTIGATORS': '调研人员',
+            'NUMBERNEW': '参会人数',
+            'CONTENT': '调研内容',
+            'CLOSE_PRICE': '收盘价',
+            'CHANGE_RATE': '涨跌幅',
+        }
+
+        survey_data = get_servey_data(RECEIVE_OBJECT = first_manager_info['公司名称'],columns="SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR,RECEIVE_START_DATE,RECEIVE_WAY_EXPLAIN,INVESTIGATORS,NUMBERNEW")
+
+        # 应用截断函数
+        survey_data['RECEIVE_START_DATE'] = survey_data['RECEIVE_START_DATE'].str.split(' ').str[0]
+        #survey_data['RECEIVE_WAY_EXPLAIN'] = survey_data['RECEIVE_WAY_EXPLAIN'].apply(truncate_text)
+        survey_data['INVESTIGATORS'] = survey_data['INVESTIGATORS'].replace({None: ''}).apply(truncate_text)
+        survey_data_display = survey_data[['SECURITY_CODE', 'SECURITY_NAME_ABBR', 'RECEIVE_START_DATE', 
+                                        'INVESTIGATORS', 'NUMBERNEW']].rename(columns=column_rename)
+        st.markdown("### 调研信息")
+        st.table(survey_data_display.set_index('股票代码'))
+    except:
+        st.write("没有找到相关数据。")
+
+
 

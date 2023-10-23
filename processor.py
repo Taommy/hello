@@ -181,3 +181,22 @@ def get_previous_quarter(quarter, quarter_num=1):
 def highlight_entities(text, entities):
     pattern = "|".join(re.escape(entity) for entity in entities)
     return re.sub(pattern, lambda m: f'<span style="color: #FF0000;font-weight: bold;">{m.group(0)}</span>', text)
+
+def make_hyperlink_for_security_name_abbr(row):
+    link = f"<a href='#' style='color:black; text-decoration: none;' title='{row['CONTENT']}'>{row['SECURITY_NAME_ABBR']}</a>"
+    return link
+
+def make_hyperlink_for_secucode(row):
+    security_code = row['SECURITY_CODE']
+    secucode=row['SECUCODE']
+    receive_start_date = row['RECEIVE_START_DATE']  # 删除日期中的连字符，如果链接中不需要可以忽略这步
+    source_url = f"https://data.eastmoney.com/jgdy/dyxx/{security_code},{receive_start_date}.html"
+    link = f"<a href='{source_url}' target='_blank' style='color:black; text-decoration: none;'>{secucode}</a>"
+    return link
+
+def truncate_text(text, max_length=15):
+    """如果文本长度超过max_length，将其截断并添加..."""
+    if len(text) > max_length:
+        return text[:max_length] + "..."
+    else:
+        return text
