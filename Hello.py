@@ -193,7 +193,7 @@ if user_input:
         try:
             # 获取数据
             stock_codes = merged_df['股票代码'].head(10)
-            return merged_df[['股票名称','股票代码']].head(10).merge(pd.DataFrame(fetch_data_concurrently(stock_codes)),left_on='股票代码',right_on='代码').applymap(lambda x: x.replace('基金', '') if isinstance(x, str) else x), None  # 第二个元素用于潜在的错误消息
+            return merged_df[['股票名称','股票代码']].head(10).merge(pd.DataFrame(fetch_data_concurrently(stock_codes)),left_on='股票代码',right_on='代码').drop(columns=['代码']).applymap(lambda x: x.replace('基金', '') if isinstance(x, str) else x), None  # 第二个元素用于潜在的错误消息
         except Exception as e:
             return None, str(e)  # 如果发生错误，返回 None 和错误消息
 
