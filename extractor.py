@@ -3,8 +3,9 @@ from concurrent.futures import ThreadPoolExecutor
 from eastmoneyapi import EastmoneyApi
 from extractor import *
 from processor import *
-session = requests.Session()
+
 api = EastmoneyApi()
+session = requests.Session()
 code = '007119'
 quarter = '2023Q2'
 sl = [code]
@@ -17,7 +18,7 @@ def get_fund_basic_info(code = '007119') -> dict:
     }
     url = f"http://fund.eastmoney.com/pingzhongdata/{code}.js"
 
-    res = requests.get(url, headers=headers)
+    res = session.get(url, headers=headers)
     text_data = res.text
 
     # 提取所有的变量赋值语句
@@ -56,7 +57,7 @@ def fund_company_by_manager(input = '傅鹏博') -> pd.DataFrame:
         'st':'desc',
         'input':input
     }
-    res = requests.get(url, headers=headers, params=params)
+    res = session.get(url, headers=headers, params=params)
     text_data = res.text.replace("var returnjson= ", "")
     json_str = re.sub(r'(\b\w+\b):', r'"\1":', text_data).replace("'", '"')
     data_dict = json.loads(json_str)
@@ -90,7 +91,7 @@ def fetch_fund_data(fund_code):
 
     # Making a GET request
     try:
-        response = requests.get(url)
+        response = session.get(url)
         response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
     except requests.RequestException as e:
         print(f"An error occurred: {e}")
@@ -146,7 +147,7 @@ def get_gscc_data(gs_id="80672691", year="2023", quarter="2", ftype="0"):
     }
 
     # 发送请求
-    response = requests.get(base_url, params=params)
+    response = session.get(base_url, params=params)
 
     # 使用pandas直接从HTML解析表格
     tables = pd.read_html(response.text)
@@ -211,7 +212,7 @@ def get_fund_holdings(code=None,year=2023,top=20,max_year=1):
     e.g. ['睿远成长价值混合A', '2020年1季度股票投资明细', '688002', '睿创微纳', '0.002', '62.02', '2378.98']
     '''
     #Get available years
-    r = requests.get(url+f'&code={code}')
+    r = session.get(url+f'&code={code}')
     y=get_api_data(r.text)
     ret = []
     years = y['arryear'][:max_year] #assuming arryear is sorted descendently
@@ -228,7 +229,7 @@ def get_annual_data(code,year,top):
     Returns:
     list
     '''
-    r = requests.get(url+f'&code={code}&topline={top}&year={year}')
+    r = session.get(url+f'&code={code}&topline={top}&year={year}')
     assert r.status_code == 200, "Invalid webpage return result; try again later."
     y=get_api_data(r.text)
     soup=bs(y['content'], features="lxml")
@@ -309,7 +310,7 @@ def get_industry_data(page_number=1, page_size=200, fields="f12,f14,f2,f3,f5,f14
     }
 
     # 发送请求
-    response = requests.get(base_url, params=params)
+    response = session.get(base_url, params=params)
 
     # 解析返回的数据
     data = json.loads(response.text[response.text.index("{"):response.text.rindex("}")+1])
@@ -373,7 +374,7 @@ def get_realtime_data(secids, fields_list=FIELDS_LIST):
     }
 
     # 发送请求
-    response = requests.get(base_url, params=params)
+    response = session.get(base_url, params=params)
 
     # 解析返回的数据
     try:
@@ -432,7 +433,7 @@ def get_realtime_data(secids, fields_list=FIELDS_LIST):
 
 
 
-def get_fund_data(sl, fields):
+def get_fund_data(sl):
     """
     获取基金持仓数据，并与实时行情数据和行业数据进行合并
 
@@ -450,6 +451,9 @@ def get_fund_data(sl, fields):
     for result in results:
         data.extend(result)
     df = pd.DataFrame(data[1:], columns=data[0])
+    return df
+
+def clean_fund_data(df,fields):
     df['季度'] = df['季度'].apply(lambda x: re.sub(r'(\d{2})年(\d)季度股票投资明细', r'\1Q\2', x))
     df['占净值比例'] = df['占净值比例'].apply(lambda x: (f'{float(x) * 100:.2f}%' if '%' not in x else '0.00%') if x not in ['-','--', '---'] else '0.00%')
     df['持仓市值(亿元)'] = df['持仓市值（万元）'].apply(lambda x: (f'{float(x) / 10000:.2f}' if '%' not in x else '0.00') if x not in ['-','--', '---'] else '0.00')
@@ -512,7 +516,7 @@ def get_fund_report_list(code:str = "377240", page_index:int = 1) -> dict:
   url = f"https://api.fund.eastmoney.com/f10/JJGG?&fundcode={code}&pageIndex={page_index}&pageSize=20&type=3"
   # Page size has a upper limit of 100. We use a fixed value of 20 here.
   # type=3 means annual & quarterly report, plz see base_url.
-  r = requests.get(url,headers={"Referer":"http://fundf10.eastmoney.com/"})
+  r = session.get(url,headers={"Referer":"http://fundf10.eastmoney.com/"})
   assert r.status_code==200
   result: dict = r.json()
   # print(len(result["Data"]))
@@ -545,7 +549,7 @@ def fetch_pdf(id,dir_name,file_name):
     print(f"New report downloading: {file_name}")
     url = f"https://pdf.dfcfw.com/pdf/H2_{id}_1.pdf" # IDK what does H2 and 1 mean
     # print(url)
-    bin = requests.get(url)
+    bin = session.get(url)
     with open(file_path, 'wb') as f:
       f.write(bin.content)
 import requests
@@ -581,7 +585,7 @@ def read_ann(art_code: str, show_all: int = 1) -> pd.DataFrame:
     }
 
     # 发送请求
-    response = requests.get(base_url, params=params, headers=headers)
+    response = session.get(base_url, params=params, headers=headers)
 
     # 解析返回的数据
     try:
@@ -616,7 +620,7 @@ def get_net_value(fund_code='007119', page_index=1, page_size=3000, start_date='
         "Referer": "http://fundf10.eastmoney.com/",
         "User-Agent": "Mozilla/5.0"
     }
-    response = requests.get(base_url, params=params, headers=headers)
+    response = session.get(base_url, params=params, headers=headers)
     data = response.json()
     df = pd.DataFrame(data['Data']['LSJZList'])
     column_mapping = {
@@ -694,7 +698,7 @@ def get_jjhsl_data(fundcode="007119", pageindex=1, pagesize=50):
     }
 
     # 发送请求
-    response = requests.get(base_url, params=params, headers=headers)
+    response = session.get(base_url, params=params, headers=headers)
     # 解析返回的数据
     try:
         data = json.loads(response.text)

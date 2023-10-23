@@ -7,9 +7,8 @@ from eastmoneyapi import EastmoneyApi
 from extractor import *
 from processor import *
 import numpy as np
-session = requests.Session()
 api = EastmoneyApi()
-
+session = requests.Session()
 def quarter_to_date(quarter_str):
     # 解析输入字符串，提取年份和季度
     year, quarter = quarter_str.split('Q')
