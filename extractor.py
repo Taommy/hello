@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from eastmoneyapi import EastmoneyApi
 from extractor import *
 from processor import *
-
+import streamlit as st
 api = EastmoneyApi()
 session = requests.Session()
 code = '007119'
@@ -11,7 +11,7 @@ quarter = '2023Q2'
 sl = [code]
 fields = ['基金名称', '季度', '股票代码', '股票名称','占净值比例', '持仓市值(亿元)','最新价','持股数（万股）','股息率', "市盈(动)","所属行业"]
 
-
+@st.cache_resource
 def get_fund_basic_info(code = '007119') -> dict:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
@@ -41,7 +41,7 @@ def get_fund_basic_info(code = '007119') -> dict:
             data_dict[key] = clean_value
 
     return data_dict
-
+@st.cache_resource
 def fund_company_by_manager(input = '傅鹏博') -> pd.DataFrame:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
@@ -70,7 +70,7 @@ def fund_company_by_manager(input = '傅鹏博') -> pd.DataFrame:
 #    columns_to_drop = ["现任基金最佳回报1", "现任基金最佳回报2"]  # 可以按需增加或删除列名称
 #    temp_df = temp_df.drop(columns=columns_to_drop)
     return temp_df[["公司名称",'公司id',"基金名称列表"]]
-
+@st.cache_resource
 def extract_manager_info(manager):
     manager_data = {
          'id': manager['id'],
@@ -86,6 +86,7 @@ def extract_manager_info(manager):
 import requests
 import json
 import pandas as pd
+@st.cache_resource
 def fetch_fund_data(fund_code):
     url = f"https://fund.10jqka.com.cn/interface/fund/managerInfo?code={fund_code}"
 
@@ -101,7 +102,7 @@ def fetch_fund_data(fund_code):
     if response.status_code == 200:
         return response.json()
     
-
+@st.cache_data
 def get_servey_data(receive_start_date = "2023-01-01",RECEIVE_OBJECT = "睿远基金",columns = "SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR,NOTICE_DATE,RECEIVE_START_DATE,RECEIVE_END_DATE,RECEIVE_OBJECT,RECEIVE_PLACE,RECEIVE_WAY_EXPLAIN,INVESTIGATORS,RECEPTIONIST,NUMBERNEW,CONTENT,ORG_TYPE",pagesize = 20):
     base_url = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 
@@ -133,7 +134,7 @@ def get_servey_data(receive_start_date = "2023-01-01",RECEIVE_OBJECT = "睿远�
 
 import requests
 import pandas as pd
-
+@st.cache_resource
 def get_gscc_data(gs_id="80672691", year="2023", quarter="2", ftype="0"):
     # API的基本URL
     base_url = "https://fund.eastmoney.com/Company/tzzh/GsccQuarter"
@@ -185,6 +186,7 @@ import json
 import concurrent.futures
 import pandas as pd
 url = f'http://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc'
+@st.cache_resource
 def get_api_data(r):
     '''
     Get formatted js dict from raw text.
@@ -198,6 +200,7 @@ def get_api_data(r):
     return y
 
 columns=[['基金名称','季度','股票代码','股票名称','占净值比例','持股数','持仓市值']]
+@st.cache_resource
 def get_fund_holdings(code=None,year=2023,top=20,max_year=1):
     '''
     Get fund holding data.
@@ -221,6 +224,7 @@ def get_fund_holdings(code=None,year=2023,top=20,max_year=1):
 #    data.extend(ret)
 #    time.sleep(0.2)
     return ret
+@st.cache_resource
 def get_annual_data(code,year,top):
     '''
     Parameters:
@@ -267,6 +271,7 @@ def get_annual_data(code,year,top):
             ret.append([name,quarter_name]+l)
             #['睿远成长价值混合A', '2020年1季度股票投资明细', '688002', '睿创微纳', '0.002', '62.02', '2378.98']
     return ret
+@st.cache_resource
 def process_stock_code(stock_code):
     if len(stock_code) == 5:
         return f'116.{stock_code}'
@@ -280,7 +285,7 @@ def process_stock_code(stock_code):
 import requests
 import pandas as pd
 import json
-
+@st.cache_resource
 def get_industry_data(page_number=1, page_size=200, fields="f12,f14,f2,f3,f5,f14,f62,f66,f69,f72,f75,f78,f81,f84,f87,f204,f205"):
     """
     获取东方财富网的行业数据
@@ -351,6 +356,7 @@ def get_industry_data(page_number=1, page_size=200, fields="f12,f14,f2,f3,f5,f14
 
 #FIELDS_LIST = ['f{}'.format(i) for i in range(1, 301)]  # 全局常量，用于存储字段列表
 FIELDS_LIST = ['f2,f9,f12,f100,f133']
+@st.cache_resource
 def get_realtime_data(secids, fields_list=FIELDS_LIST):
     """
     获取东方财富网的实时行情数据
@@ -432,7 +438,7 @@ def get_realtime_data(secids, fields_list=FIELDS_LIST):
     return df
 
 
-
+@st.cache_resource
 def get_fund_data(sl):
     """
     获取基金持仓数据，并与实时行情数据和行业数据进行合并
@@ -468,7 +474,7 @@ def clean_fund_data(df,fields):
 #    merged_data = pd.merge(merged_data, industry_data, left_on='所属行业', right_on='行业名称', how='left')
     return merged_data[fields]
 
-
+@st.cache_resource
 def get_fund_report_list(code:str = "377240", page_index:int = 1) -> dict:
   """ Get part of fund report list.
 
@@ -523,7 +529,7 @@ def get_fund_report_list(code:str = "377240", page_index:int = 1) -> dict:
   # print(yaml.dump(result,allow_unicode=True,))
   assert result["ErrCode"]==0, result["ErrMsg"]
   return result
-
+@st.cache_resource
 def get_fund_report(code:str = "000001"):
   r = get_fund_report_list(code)
   data = []
@@ -537,7 +543,7 @@ def get_fund_report(code:str = "000001"):
     print("Report list not complete.")
   return data
 
-
+@st.cache_data
 def fetch_pdf(id,dir_name,file_name):
   if not os.path.exists(dir_name):
     try:
@@ -555,7 +561,7 @@ def fetch_pdf(id,dir_name,file_name):
 import requests
 import json
 import pandas as pd
-
+@st.cache_resource
 def read_ann(art_code: str, show_all: int = 1) -> pd.DataFrame:
     """
     https://np-cnotice-fund.eastmoney.com/api/content/ann?client_source=web_fund&show_all=1&art_code=AN202308281595906195
@@ -607,6 +613,7 @@ import numpy as np
 import base64
 import io
 import matplotlib.pyplot as plt
+@st.cache_resource
 def get_net_value(fund_code='007119', page_index=1, page_size=3000, start_date='', end_date=''):
     base_url = "http://api.fund.eastmoney.com/f10/lsjz"
     params = {
@@ -633,7 +640,7 @@ def get_net_value(fund_code='007119', page_index=1, page_size=3000, start_date='
     df['日增长率'] = df['日增长率'].apply(lambda x: f"{x}%")
     return df[['净值日期', '单位净值', '累计净值', '日增长率']].sort_values(by='净值日期').reset_index(drop=True)
 
-
+@st.cache_resource
 def get_main_holders(code):
     global quarter
     try:
@@ -672,14 +679,14 @@ def get_main_holders(code):
     except Exception as e:
         # 在出现异常时返回一个包含股票代码的字典，其他字段为空
         return {'代码': code, '基金公司1': '', '基金公司2': '', '基金公司3': '', '基金公司4': '', '基金公司5': ''}
-
+@st.cache_resource
 # 定义一个执行多线程的函数
 def fetch_data_concurrently(codes):
     with ThreadPoolExecutor(max_workers=5) as executor:  # 这里的 max_workers 可根据您的系统和需求进行调整
         results = executor.map(get_main_holders, codes)
     return list(results)
 
-
+@st.cache_resource
 def get_jjhsl_data(fundcode="007119", pageindex=1, pagesize=50):
     # API的基本URL
     base_url = "http://api.fund.eastmoney.com/f10/JJHSL/"
