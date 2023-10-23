@@ -7,3 +7,4 @@ matplotlib
 BeautifulSoup4
 PyYAML
 lxml
+lxml
