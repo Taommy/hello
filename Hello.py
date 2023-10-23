@@ -72,20 +72,23 @@ if  user_input:
 
     try:
     # 假设 get_fund_basic_info 和 extract_manager_info 函数已经定义并可以使用
+        fund_data = get_fund_basic_info(code)
+        managers_data = fund_data['Data_currentFundManager']
+        # 使用多线程进行并行处理
+        with ThreadPoolExecutor() as executor:
+            managers = list(executor.map(extract_manager_info, managers_data))
         fund_data = fetch_fund_data(code)
-        st.write(fund_data)  # 打印输出以检查函数响应
         ths_managers = process_fund_manager(fund_data)
 
 
+
     # 1. 创建一个从基金经理姓名到他们信息的映射
-        managers_info = {manager['基金经理']: manager for manager in ths_managers}
+        managers_info = {manager['基金经理']: manager for manager in managers}
         # 2. 遍历新代码的基金经理列表，更新原始信息
-        for new_manager in managers:
+        for new_manager in ths_managers:
             # 如果这个基金经理已经在原始数据中，我们就更新他们的记录
             if new_manager['姓名'] in managers_info:
                 managers = managers_info[new_manager['姓名']]
-
-                # 添加新的字段到原始记录中
                 managers['起始时间'] = new_manager.get('起始时间')
                 managers['结束时间'] = new_manager.get('结束时间')
                 managers['简介'] = new_manager.get('简介')
