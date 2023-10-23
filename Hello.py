@@ -78,10 +78,10 @@ if  user_input:
         st.write(f"基金代码：{fund_data['fS_code']}")
         yield_rates = f"""
         收益率：
-        - 1月：{fund_data['syl_1y']}%
-        - 3月：{fund_data['syl_3y']}%
-        - 6月：{fund_data['syl_6y']}%
-        - 1年：{fund_data['syl_1n']}%
+        - 近1月：{fund_data['syl_1y']}%
+        - 近3月：{fund_data['syl_3y']}%
+        - 近6月：{fund_data['syl_6y']}%
+        - 近1年：{fund_data['syl_1n']}%
         """
 
         # 在Streamlit应用中显示格式化的字符串
@@ -183,43 +183,39 @@ if  user_input:
 
 # 如果用户输入了股票代码
 if user_input:
-    try:
-        # 获取数据
-        holdings_data = get_main_holders(user_input)
+    # 获取数据
+    holdings_data = get_main_holders(user_input)
+    # 如果返回的数据不是空的
+    if holdings_data:
+        st.markdown("""
+                    <style>
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 12px;  /* 这里调整字号大小 */
+                            font-family: 'KaiTi';  /* 使用楷体字体 */
+                        }
+                        th, td {
+                            text-align: left;
+                            padding: 8px;
+                            border: 1px solid #dddddd;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                        }
+                        body {
+                            font-family: 'KaiTi';  /* 设置页面其他部分的字体为楷体 */
+                        }
+                    </style>
+                """, unsafe_allow_html=True)
 
-        # 如果返回的数据不是空的
-        if holdings_data:
-            st.markdown("""
-                        <style>
-                            table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                font-size: 12px;  /* 这里调整字号大小 */
-                                font-family: 'KaiTi';  /* 使用楷体字体 */
-                            }
-                            th, td {
-                                text-align: left;
-                                padding: 8px;
-                                border: 1px solid #dddddd;
-                            }
-                            th {
-                                background-color: #f2f2f2;
-                            }
-                            body {
-                                font-family: 'KaiTi';  /* 设置页面其他部分的字体为楷体 */
-                            }
-                        </style>
-                    """, unsafe_allow_html=True)
+        
+        st.markdown("## 持股主要基金")  # 添加标题
+        st.table(holdings_df.set_index('代码'))  # 使用 Streamlit 的 dataframe 显示功能
+    else:
+        st.write("没有找到相关数据。")
 
-            
-            st.markdown("## 持股主要基金")  # 添加标题
-            st.table(holdings_df.set_index('代码'))  # 使用 Streamlit 的 dataframe 显示功能
-        else:
-            st.write("没有找到相关数据。")
-    except Exception as e:
-        # 如果出现错误，则在Streamlit应用中显示错误信息
-        st.error(f"出现错误: {str(e)}")
-
+a='''
 if user_input:
     first_manager_name, first_manager_info = next(iter(managers_info.items()))
     gscc = get_gscc_data(gs_id=first_manager_info['公司id'])
@@ -227,7 +223,7 @@ if user_input:
     st.markdown('### 基金公司整体持仓情况')
     st.table(gscc_html.set_index('股票代码'))
 
-a='''
+
     try:
 # 定义一些预设的列名称和重命名字典
         columns = "SECUCODE,SECURITY_NAME_ABBR,INVESTIGATORS,RECEIVE_START_DATE,NUMBERNEW"
