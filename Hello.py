@@ -73,6 +73,18 @@ if  user_input:
     try:
     # 假设 get_fund_basic_info 和 extract_manager_info 函数已经定义并可以使用
         fund_data = get_fund_basic_info(code)
+        st.write(f"基金名称：{fund_data['fS_name']}")
+        st.write(f"基金代码：{fund_data['fS_code']}")
+        yield_rates = f"""
+        累计收益率：
+        - 1月：{fund_data['syl_1y']}%
+        - 3月：{fund_data['syl_3y']}%
+        - 6月：{fund_data['syl_6y']}%
+        - 1年：{fund_data['syl_1n']}%
+        """
+
+        # 在Streamlit应用中显示格式化的字符串
+        st.write(yield_rates)
         managers_data = fund_data['Data_currentFundManager']
         # 使用多线程进行并行处理
         with ThreadPoolExecutor() as executor:
