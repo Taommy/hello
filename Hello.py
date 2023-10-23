@@ -70,6 +70,53 @@ if  user_input:
     fields = ['基金名称', '季度', '股票代码', '股票名称','占净值比例', '持仓市值(亿元)','最新价','持股数（万股）','股息率', "市盈(动)","所属行业"]
     api = EastmoneyApi()
 
+    try:
+    # 假设 get_fund_basic_info 和 extract_manager_info 函数已经定义并可以使用
+        fund_data = fetch_fund_data(code)
+        st.write(fund_data)  # 打印输出以检查函数响应
+        ths_managers = process_fund_manager(fund_data)
+
+
+    # 1. 创建一个从基金经理姓名到他们信息的映射
+        managers_info = {manager['基金经理']: manager for manager in ths_managers}
+        # 2. 遍历新代码的基金经理列表，更新原始信息
+        for new_manager in managers:
+            # 如果这个基金经理已经在原始数据中，我们就更新他们的记录
+            if new_manager['姓名'] in managers_info:
+                managers = managers_info[new_manager['姓名']]
+
+                # 添加新的字段到原始记录中
+                managers['起始时间'] = new_manager.get('起始时间')
+                managers['结束时间'] = new_manager.get('结束时间')
+                managers['简介'] = new_manager.get('简介')
+                managers['年龄'] = new_manager.get('年龄')
+                managers['学历'] = new_manager.get('学历')
+                managers['其他基金'] = new_manager.get('其他基金')
+
+        manager_html = ""
+
+        for manager_name, manager_info in managers_info.items():
+            manager_card = f"""
+            <div class="card custom-card mb-3" style="position: relative; padding: 20px; overflow: hidden;">
+                <img src="{manager_info['图片']}" class="card-img manager-image" alt="{manager_name}" style="width: 150px; height: 150px; position: absolute; top: 20px; right: 20px; z-index: 1;">
+                <div class="card-body" style="z-index: 2; position: relative;">
+                    <h5 class="card-title">{manager_name}</h5>
+                    <p class="card-text">公司名称：{manager_info['公司名称']}</p>
+                    <p class="card-text">年龄：{manager_info['年龄']}</p>
+                    <p class="card-text">学历：{manager_info['学历']}</p>
+                    <p class="card-text">在管基金：{manager_info['在管基金']}</p>
+                    <p class="card-text">工作年限：{manager_info['工作时间']}</p>
+                    <p class="card-text">基金规模：{manager_info['基金规模']}</p>
+                    <p class="card-text">任职时间：{manager_info['起始时间']}</p>
+                    <p class="card-text">简介：{manager_info['简介']}</p>
+                </div>
+            </div>
+            """
+            manager_html += manager_card
+        st.markdown(manager_html, unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error(f"出现错误: {str(e)}")
 
 
     # 获取股票代码列表
@@ -79,10 +126,7 @@ if  user_input:
     fund_name = df.iloc[0]['基金名称']
     fund_code = code  # 您提供的基金代码
     fund_quarter = quarter
-    # 在Streamlit应用中显示数据框
-    st.subheader('基金名称: ' + fund_name)
-    st.text('基金代码: ' + fund_code)
-    st.text('季度: ' + fund_quarter)
+
     # Get the previous quarter using the function
     previous_quarter = get_previous_quarter(quarter)
     # Merge the dataframe with itself to get current and previous quarter's holdings side by side
