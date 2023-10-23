@@ -69,7 +69,7 @@ mobile_css = """
 st.markdown(mobile_css, unsafe_allow_html=True)
 # 添加一个标题
 st.markdown('#### 基金持股&调研信息')
-
+st.write('目前还在尝试，完全加载大约需要半分钟')
 # 用户输入
 user_input = st.text_input('请输入基金代码:如007119')
 
