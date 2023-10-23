@@ -69,7 +69,7 @@ mobile_css = """
 st.markdown(mobile_css, unsafe_allow_html=True)
 # 添加一个标题
 st.markdown('#### 基金持股&调研信息')
-st.write('目前还在尝试，完全加载大约需要半分钟')
+
 # 用户输入
 user_input = st.text_input('请输入基金代码:如007119')
 
@@ -120,25 +120,33 @@ if  user_input:
                 managers['学历'] = new_manager.get('学历')
                 managers['其他基金'] = new_manager.get('其他基金')
 
-        for manager_name, manager_info in managers_info.items():
-            # 使用 Streamlit 组件展示基金经理信息
-            col1, col2 = st.columns([1, 3])  # 调整列的宽度比例
-            
-            with col1:
-                st.image(manager_info['图片'], width=150)  # 显示基金经理的图片
-            with col2:
-                st.markdown(f"### {manager_name}")
-                st.write(f"公司名称：{manager_info['公司名称']}")
-                st.write(f"年龄：{manager_info['年龄']}")
-                st.write(f"学历：{manager_info['学历']}")
-                st.write(f"在管基金：{manager_info['在管基金']}")
-                st.write(f"工作年限：{manager_info['工作时间']}")
-                st.write(f"基金规模：{manager_info['基金规模']}")
-                st.write(f"任职时间：{manager_info['起始时间']}")
-                st.markdown(f"简介：{manager_info['简介']}")
+        # 获取所有基金经理的姓名
+        manager_names = list(managers_info.keys())
 
+        # 创建下拉菜单让用户选择一个基金经理
+        selected_manager_name = st.selectbox('选择一个基金经理:', manager_names)
+
+        # 获取所选基金经理的信息
+        selected_manager_info = managers_info[selected_manager_name]
+
+        # 使用 Streamlit 组件展示所选基金经理的信息
+        col1, col2 = st.columns([1, 3])  # 调整列的宽度比例
+
+        with col1:
+            st.image(selected_manager_info['图片'], width=150)  # 显示基金经理的图片
+        with col2:
+            st.markdown(f"### {selected_manager_name}")
+            st.write(f"公司名称：{selected_manager_info['公司名称']}")
+            st.write(f"年龄：{selected_manager_info['年龄']}")
+            st.write(f"学历：{selected_manager_info['学历']}")
+            st.write(f"在管基金：{selected_manager_info['在管基金']}")
+            st.write(f"工作年限：{selected_manager_info['工作时间']}")
+            st.write(f"基金规模：{selected_manager_info['基金规模']}")
+            st.write(f"任职时间：{selected_manager_info['起始时间']}")
+            st.markdown(f"简介：{selected_manager_info['简介']}")
     except Exception as e:
         st.error(f"出现错误: {str(e)}")
+
 
 
     # 获取股票代码列表
