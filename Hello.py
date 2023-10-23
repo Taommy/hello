@@ -19,6 +19,11 @@ FONT_CSS = """
         font-family: 'Times New Roman', sans-serif;
     }
 
+    /* 定义表格中的中文字体为楷体 */
+    st.table {
+        font-family: 'KaiTi', 'Times New Roman', sans-serif;
+    }
+    
 </style>
 """
 st.markdown(FONT_CSS, unsafe_allow_html=True)
@@ -37,7 +42,9 @@ mobile_css = """
         body, .stTextInput input {
             font-size: 12px; /* 调整非表格文本的字体大小 */
         }
-
+        .stTextInput input {
+            height: 3em; /* 调整输入框大小 */
+        }
     }
 </style>
 """
@@ -171,19 +178,20 @@ if user_input:
     holdings_data = get_main_holders(user_input)
     # 如果返回的数据不是空的
     if holdings_data:
+
         st.markdown("## 持股主要基金")  # 添加标题
         st.table(holdings_df.set_index('代码'))  # 使用 Streamlit 的 dataframe 显示功能
     else:
         st.write("没有找到相关数据。")
 
-a='''
+
 if user_input:
     first_manager_name, first_manager_info = next(iter(managers_info.items()))
     gscc = get_gscc_data(gs_id=first_manager_info['公司id'])
     gscc_html = gscc.head(10).astype(str)
     st.markdown('### 基金公司整体持仓情况')
     st.table(gscc_html.set_index('股票代码'))
-
+a='''
 
     try:
 # 定义一些预设的列名称和重命名字典
