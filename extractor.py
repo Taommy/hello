@@ -3,8 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 from eastmoneyapi import EastmoneyApi
 from extractor import *
 from processor import *
-api = EastmoneyApi()
 session = requests.Session()
+api = EastmoneyApi()
 code = '007119'
 quarter = '2023Q2'
 sl = [code]
