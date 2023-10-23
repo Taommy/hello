@@ -227,7 +227,7 @@ if user_input:
     st.markdown('### 基金公司整体持仓情况')
     st.table(gscc_html.set_index('股票代码'))
 
-
+a='''
     try:
 # 定义一些预设的列名称和重命名字典
         columns = "SECUCODE,SECURITY_NAME_ABBR,INVESTIGATORS,RECEIVE_START_DATE,NUMBERNEW"
@@ -259,5 +259,5 @@ if user_input:
     except:
         st.write("没有找到相关数据。")
 
-
+'''
 
