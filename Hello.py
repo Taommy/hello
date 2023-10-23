@@ -201,6 +201,7 @@ if user_input:
                 'CHANGE_RATE': '涨跌幅',
             }
     # 定义任务函数
+    @st.cache_resource
     def get_holdings_data():
         try:
             # 获取数据
@@ -208,14 +209,14 @@ if user_input:
             return merged_df[['股票名称','股票代码']].head(10).merge(pd.DataFrame(fetch_data_concurrently(stock_codes)),left_on='股票代码',right_on='代码').drop(columns=['代码']).applymap(lambda x: x.replace('基金', '') if isinstance(x, str) else x), None  # 第二个元素用于潜在的错误消息
         except Exception as e:
             return None, str(e)  # 如果发生错误，返回 None 和错误消息
-
+    @st.cache_resource
     def get_gscc():
         try:
             first_manager_name, first_manager_info = next(iter(managers_info.items()))
             return get_gscc_data(gs_id=first_manager_info['公司id']), None
         except Exception as e:
             return None, str(e)
-
+    @st.cache_resource
     def get_survey_data():
         try:
             first_manager_name, first_manager_info = next(iter(managers_info.items()))
