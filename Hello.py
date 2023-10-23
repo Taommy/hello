@@ -58,7 +58,7 @@ mobile_css = """
 """
 st.markdown(mobile_css, unsafe_allow_html=True)
 # 添加一个标题
-st.title('基金持股')
+st.title('基金主要信息')
 
 # 用户输入
 user_input = st.text_input('请输入基金代码:比如007119')
