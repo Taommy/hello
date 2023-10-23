@@ -19,20 +19,6 @@ FONT_CSS = """
         font-family: 'Times New Roman', sans-serif;
     }
 
-    /* 定义Streamlit输入框的字体 */
-    .stTextInput input {
-        font-family: 'Times New Roman', sans-serif;
-    }
-    /* 定义输入框的字体 */
-    st.text_input {
-        font-family: 'Times New Roman', sans-serif;
-    }
-
-    /* 定义表格中的中文字体为楷体 */
-    st.table {
-        font-family: 'KaiTi', 'Times New Roman', sans-serif;
-    }
-    
 </style>
 """
 st.markdown(FONT_CSS, unsafe_allow_html=True)
@@ -51,9 +37,7 @@ mobile_css = """
         body, .stTextInput input {
             font-size: 12px; /* 调整非表格文本的字体大小 */
         }
-        .stTextInput input {
-            height: 3em; /* 调整输入框大小 */
-        }
+
     }
 </style>
 """
@@ -187,29 +171,6 @@ if user_input:
     holdings_data = get_main_holders(user_input)
     # 如果返回的数据不是空的
     if holdings_data:
-        st.markdown("""
-                    <style>
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            font-size: 12px;  /* 这里调整字号大小 */
-                            font-family: 'KaiTi';  /* 使用楷体字体 */
-                        }
-                        th, td {
-                            text-align: left;
-                            padding: 8px;
-                            border: 1px solid #dddddd;
-                        }
-                        th {
-                            background-color: #f2f2f2;
-                        }
-                        body {
-                            font-family: 'KaiTi';  /* 设置页面其他部分的字体为楷体 */
-                        }
-                    </style>
-                """, unsafe_allow_html=True)
-
-        
         st.markdown("## 持股主要基金")  # 添加标题
         st.table(holdings_df.set_index('代码'))  # 使用 Streamlit 的 dataframe 显示功能
     else:
