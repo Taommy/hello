@@ -124,7 +124,7 @@ if  user_input:
         manager_names = list(managers_info.keys())
 
         # 创建下拉菜单让用户选择一个基金经理
-        selected_manager_name = st.selectbox('选择一个基金经理:', manager_names)
+        selected_manager_name = st.selectbox('选择基金经理:', manager_names)
 
         # 获取所选基金经理的信息
         selected_manager_info = managers_info[selected_manager_name]
