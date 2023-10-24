@@ -69,9 +69,11 @@ mobile_css = """
 st.markdown(mobile_css, unsafe_allow_html=True)
 # 添加一个标题
 st.markdown('#### 基金持股&调研信息')
-
+# 添加一个副标题
+st.write('完整加载大概需要半分钟，如果出现错误，可以尝试刷新页面，欢迎反馈！')
+st.write('数据来源：东方财富网、同花顺、雪球、新浪财经')
 # 用户输入
-user_input = st.text_input('请输入基金代码:如007119')
+user_input = st.text_input('##### 请输入基金代码:如007119')
 
 if  user_input:
     code = user_input
@@ -182,7 +184,6 @@ if  user_input:
     from concurrent.futures import ThreadPoolExecutor
     st.markdown("#### 持股数据")  # 添加标题
     st.table(df_html.set_index('代码'))  # 使用Streamlit的dataframe显示功能，并移除索引  # 使用 Streamlit 的 dataframe 显示功能
-    
 # 如果用户输入了股票代码
 if user_input:
     from concurrent.futures import ThreadPoolExecutor
@@ -223,16 +224,53 @@ if user_input:
             return get_servey_data(RECEIVE_OBJECT=first_manager_info['公司名称'], columns="SECURITY_CODE,SECURITY_NAME_ABBR,RECEIVE_START_DATE,INVESTIGATORS,NUMBERNEW,CONTENT", pagesize=10), None
         except Exception as e:
             return None, str(e) # 如果发生错误，返回 None 和错误消息
+    @st.cache_resource
+    def get_fund_reports_data():
+        try:
+            # Map
+            from multiprocessing.dummy import Pool
+            pool = Pool(8)  # limit number of threads
+
+            fund_list = sl
+            data = []
+            results = pool.map(get_fund_report, fund_list)
+            for result in results:
+                data.extend(result)
+
+            report_list = pd.json_normalize(data)
+            report_list = report_list[report_list['TITLE'].str.endswith('报告')]
+
+            # 假设你已经有了一个包含报告ID的列表
+            report_entry = report_list.iloc[:20][['TITLE', 'ID']]  # 假设 report_list 是一个包含报告信息的 DataFrame
+
+            # 使用 ThreadPoolExecutor 进行并行处理
+            with ThreadPoolExecutor(max_workers=20) as executor:  # max_workers 设置为 20，因为我们要处理 20 个报告
+                future_results = executor.map(process_single_report, report_entry.to_dict(orient='records'))
+
+            # 收集结果
+            report_data = []
+            for future in future_results:
+                report_data.append(future)
+
+            # 返回获取的报告数据
+            return pd.DataFrame(report_data), None  # 第二个元素用于潜在的错误消息
+
+        except Exception as e:
+            # 如果发生错误，返回 None 和错误消息
+            return None, str(e)
+        
     # 使用ThreadPoolExecutor来并行执行任务
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         future1 = executor.submit(get_holdings_data)
         future2 = executor.submit(get_gscc)
         future3 = executor.submit(get_survey_data)
+        future4 = executor.submit(get_fund_reports_data)
 
         # 等待所有任务完成并获取结果
         holdings_data, error1 = future1.result()
         gscc_data, error2 = future2.result()
         survey_data, error3 = future3.result()
+        fund_reports_data,error4=future4.result()
     
     if not holdings_data.empty:
         st.markdown("#### 持股主要基金")  # 添加标题
@@ -260,7 +298,7 @@ if user_input:
         # 向下拉列表中添加一个默认的空选项
         empty_msg='选择公司查看详细调研信息...'
         companies = [empty_msg] + list(survey_data['SECURITY_NAME_ABBR'].unique())
-        selected_company = st.selectbox('', companies)
+        selected_company = st.selectbox("请选择一家公司以查看详细调研信息:", companies)
 
         # 当用户选择一个非空公司名称时，显示该公司的详细信息
         if selected_company != empty_msg:
@@ -270,5 +308,23 @@ if user_input:
     else:
         st.write("没有找到相关数据。")
 
+    if not fund_reports_data.empty:
 
+        st.markdown("#### 季度报告策略回顾及前景展望内容")
+        # 首先，我们创建一个报告标题到报告数据的映射，以便后面可以基于用户的选择来检索数据
+        report_mapping = {report['title']: report for report in fund_reports_data.to_dict(orient='records')}  # 将DataFrame转换为字典列表
 
+        # 创建一个下拉菜单，让用户可以选择一个报告
+        report_titles = ['请选择一个报告...'] + [report['title'] for report in fund_reports_data.to_dict(orient='records')]
+        selected_report = st.selectbox('选择一个报告来查看详细信息：', report_titles)
+
+        # 当用户选择一个报告时，显示该报告的详细信息
+        if selected_report != '请选择一个报告...':
+            # 从映射中获取所选报告的数据
+            report_details = report_mapping[selected_report]
+
+            # 显示报告的详细信息，不再显示报告ID
+            st.write(f"策略回顾: \n{report_details['strategy']}")
+            st.write(f"前景展望: \n{report_details['outlook']}")
+    else:
+        st.write("请选择一个报告以查看详细信息。")

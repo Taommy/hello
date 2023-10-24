@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from eastmoneyapi import EastmoneyApi
 from extractor import *
-from processor import *
 import numpy as np
 api = EastmoneyApi()
 session = requests.Session()
@@ -200,3 +199,4 @@ def truncate_text(text, max_length=15):
         return text[:max_length] + "..."
     else:
         return text
+    

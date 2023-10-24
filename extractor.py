@@ -355,9 +355,9 @@ def get_industry_data(page_number=1, page_size=200, fields="f12,f14,f2,f3,f5,f14
 
 
 #FIELDS_LIST = ['f{}'.format(i) for i in range(1, 301)]  # 全局常量，用于存储字段列表
-FIELDS_LIST = ['f2,f9,f12,f100,f133']
 @st.cache_resource
-def get_realtime_data(secids, fields_list=FIELDS_LIST):
+def get_realtime_data(secids):
+    FIELDS_LIST = ['f2,f9,f12,f100,f133']
     """
     获取东方财富网的实时行情数据
 
@@ -375,7 +375,7 @@ def get_realtime_data(secids, fields_list=FIELDS_LIST):
     params = {
         "fltt": "2",
         "invt": "2",
-        "fields": ','.join(fields_list),
+        "fields": ','.join(FIELDS_LIST),
         "secids": secids,
     }
 
@@ -396,6 +396,7 @@ def get_realtime_data(secids, fields_list=FIELDS_LIST):
 #    df['f5'] = df['f5'].apply(lambda x: round(x / 10000, 2))
 #    df['f6'] = df['f6'].apply(lambda x: round(x / 100000000, 2))
     # 重命名列名
+    '''
     df = df.rename(columns={
         'f2': '最新价',
         'f3': '涨跌幅',
@@ -433,7 +434,16 @@ def get_realtime_data(secids, fields_list=FIELDS_LIST):
         "f44": "最新一期利润总额",
         "f45": "最新一期归母净利润",
         "f133":"股息率",
-
+    
+    })
+    '''
+    df = df.rename(columns={
+        'f2': '最新价',
+        'f9': '市盈(动)',
+        'f12': '股票代码',
+        'f100': '所属行业',
+        "f133":"股息率",
+    
     })
     return df
 
@@ -458,7 +468,7 @@ def get_fund_data(sl):
         data.extend(result)
     df = pd.DataFrame(data[1:], columns=data[0])
     return df
-
+@st.cache_resource
 def clean_fund_data(df,fields):
     df['季度'] = df['季度'].apply(lambda x: re.sub(r'(\d{2})年(\d)季度股票投资明细', r'\1Q\2', x))
     df['占净值比例'] = df['占净值比例'].apply(lambda x: (f'{float(x) * 100:.2f}%' if '%' not in x else '0.00%') if x not in ['-','--', '---'] else '0.00%')
@@ -606,8 +616,6 @@ def read_ann(art_code: str, show_all: int = 1) -> pd.DataFrame:
     return ann_data['notice_content']
 
 
-
-
 import pandas as pd
 import numpy as np
 import base64
@@ -716,3 +724,36 @@ def get_jjhsl_data(fundcode="007119", pageindex=1, pagesize=50):
     except json.JSONDecodeError as e:
         print(f"解析JSON时出错: {e}")
         return pd.DataFrame()
+@st.cache_resource    
+# 定义一个函数来处理单个报告
+def process_single_report(report_entry):
+    report_id = report_entry['ID']
+    report_title = report_entry['TITLE']
+    try:
+        # 读取报告内容
+        ann = read_ann(report_id)
+
+        # 提取“投资策略和运作分析”部分
+        try:
+            strategy_section = re.sub(r'\n+', '\n', re.sub(r'(?<=[^\n。！？”])\n(?=[^\n])', '', extract_section(ann[5000:], "投资策略和运作分析", "业绩表现")))[11:]
+        except Exception as e:
+            strategy_section = f""
+
+        # 提取“简要展望”部分
+        try:
+            outlook_section = re.sub(r'\n+', '\n', re.sub(r'(?<=[^\n。！？”])\n(?=[^\n])', '', extract_section(ann[5000:], "简要展望", "基金估值")))[6:]
+        except Exception as e:
+            outlook_section = f""
+
+        # 返回提取的部分
+        return {
+            'id': report_id,
+            'title': report_title,
+            'strategy': strategy_section,
+            'outlook': outlook_section
+        }
+    except Exception as e:
+        return {
+            'id': report_id,
+            'error': str(e)
+        }
