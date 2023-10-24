@@ -154,7 +154,8 @@ if  user_input:
     # 获取股票代码列表
     #stock_codes =  ['002475','600309']
     df = get_fund_data(sl = sl)
-    df= clean_fund_data(df=df,fields=fields)
+ #   df= clean_fund_data(df=df,fields=fields)
+    df= clean_fund_data(df=df)
     # 提取基金名称和基金代码
     fund_quarter = quarter
 
@@ -173,12 +174,16 @@ if  user_input:
 
     import io
     import base64
-
-    df_html = (merged_df[['股票代码', '股票名称', '所属行业', '占净值比例', '持仓市值(亿元)','持股数（万股）', '同比%', '股息率', '市盈(动)']]
+    df_html = (merged_df[['股票代码', '股票名称', '占净值比例', '持仓市值(亿元)','持股数（万股）', '同比%']]
                     .head(10)
                     .rename(columns={'持仓市值(亿元)': '持仓(亿元)','所属行业':'行业','持股数（万股）':'持股(万股)','股票代码':'代码','股票名称':'名称'})
                     .reset_index(drop=True)
                     .astype(str))
+#    df_html = (merged_df[['股票代码', '股票名称', '所属行业', '占净值比例', '持仓市值(亿元)','持股数（万股）', '同比%', '股息率', '市盈(动)']]
+#                    .head(10)
+#                    .rename(columns={'持仓市值(亿元)': '持仓(亿元)','所属行业':'行业','持股数（万股）':'持股(万股)','股票代码':'代码','股票名称':'名称'})
+#                    .reset_index(drop=True)
+#                    .astype(str))
     df_html.columns.name = '序号'
     import pandas as pd
     from concurrent.futures import ThreadPoolExecutor

@@ -469,20 +469,21 @@ def get_fund_data(sl):
     df = pd.DataFrame(data[1:], columns=data[0])
     return df
 @st.cache_resource
-def clean_fund_data(df,fields):
+def clean_fund_data(df):
     df['季度'] = df['季度'].apply(lambda x: re.sub(r'(\d{2})年(\d)季度股票投资明细', r'\1Q\2', x))
     df['占净值比例'] = df['占净值比例'].apply(lambda x: (f'{float(x) * 100:.2f}%' if '%' not in x else '0.00%') if x not in ['-','--', '---'] else '0.00%')
     df['持仓市值(亿元)'] = df['持仓市值（万元）'].apply(lambda x: (f'{float(x) / 10000:.2f}' if '%' not in x else '0.00') if x not in ['-','--', '---'] else '0.00')
-    df['secids'] = df['股票代码'].apply(process_stock_code)  # 创造secids前缀，沪1，深0，港116
-    secids = df.secids.unique()
+#    df['secids'] = df['股票代码'].apply(process_stock_code)  # 创造secids前缀，沪1，深0，港116
+#    secids = df.secids.unique()
     # 通过secids前缀找到实时数据
-    realtime_data = get_realtime_data(','.join(secids))  # realtime_data还有很多数据待发掘
+#    realtime_data = get_realtime_data(','.join(secids))  # realtime_data还有很多数据待发掘
     # 拼接data
-    merged_data = pd.merge(df, realtime_data[['最新价','股票代码','股息率', "市盈(动)", "所属行业"]], on='股票代码', how='left')
+ #   merged_data = pd.merge(df, realtime_data[['最新价','股票代码','股息率', "市盈(动)", "所属行业"]], on='股票代码', how='left')
     # 找到行业涨跌幅数据并进行拼接
 #    industry_data = get_industry_data(fields='f3,f14')
 #    merged_data = pd.merge(merged_data, industry_data, left_on='所属行业', right_on='行业名称', how='left')
-    return merged_data[fields]
+#    return merged_data[fields]
+    return df
 
 @st.cache_resource
 def get_fund_report_list(code:str = "377240", page_index:int = 1) -> dict:
