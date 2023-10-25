@@ -77,7 +77,7 @@ user_input = st.text_input('##### 请输入基金代码:如007119')
 
 if  user_input:
     code = user_input
-    quarter = '2023Q2'
+    quarter = '2023Q3'
     sl = [code]
     fields = ['基金名称', '季度', '股票代码', '股票名称','占净值比例', '持仓市值(亿元)','最新价','持股数（万股）','股息率', "市盈(动)","所属行业"]
     api = EastmoneyApi()

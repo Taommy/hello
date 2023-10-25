@@ -7,7 +7,7 @@ import streamlit as st
 api = EastmoneyApi()
 session = requests.Session()
 code = '007119'
-quarter = '2023Q2'
+quarter = '2023Q3'
 sl = [code]
 fields = ['基金名称', '季度', '股票代码', '股票名称','占净值比例', '持仓市值(亿元)','最新价','持股数（万股）','股息率', "市盈(动)","所属行业"]
 
@@ -135,7 +135,7 @@ def get_servey_data(receive_start_date = "2023-01-01",RECEIVE_OBJECT = "睿远�
 import requests
 import pandas as pd
 @st.cache_resource
-def get_gscc_data(gs_id="80672691", year="2023", quarter="2", ftype="0"):
+def get_gscc_data(gs_id="80672691", year="2023", quarter="3", ftype="0"):
     # API的基本URL
     base_url = "https://fund.eastmoney.com/Company/tzzh/GsccQuarter"
 
