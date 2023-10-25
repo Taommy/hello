@@ -135,7 +135,7 @@ def get_servey_data(receive_start_date = "2023-01-01",RECEIVE_OBJECT = "睿远�
 import requests
 import pandas as pd
 @st.cache_resource
-def get_gscc_data(gs_id="80672691", year="2023", quarter="3", ftype="0"):
+def get_gscc_data(gs_id="80672691", year="2023", quarter="2", ftype="0"):
     # API的基本URL
     base_url = "https://fund.eastmoney.com/Company/tzzh/GsccQuarter"
 
